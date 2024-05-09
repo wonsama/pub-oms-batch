@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<!--
+  see more : https://mybatis.org/mybatis-3/ko/configuration.html
+-->
+<configuration>
+
+	<settings>
+		<!-- 디폴트 실행자(executor) 설정. SIMPLE 실행자는 특별히 하는 것이 없다. REUSE 실행자는 PreparedStatement를 재사용한다. BATCH 실행자는 구문을 재사용하고 수정을 배치처리한다. -->
+		<setting name="defaultExecutorType" value="BATCH" />
+
+	  	<!-- 데이터베이스로의 응답을 얼마나 오래 기다릴지를 판단하는 타임아웃을 설정(초) -->
+		<setting name="defaultStatementTimeout" value="30"/>
+
+		<!-- 설정에서 각 매퍼에 설정된 캐시를 전역적으로 사용할지 말지에 대한 여부 -->
+		<setting name="cacheEnabled" value="false" />
+
+		<!-- 전통적인 데이터베이스 칼럼명 형태인 A_COLUMN을 CamelCase형태의 자바 프로퍼티명 형태인 aColumn으로 자동으로 매핑하도록 함 -->
+		<setting name="mapUnderscoreToCamelCase" value="true"/>
+
+	</settings>
+
+    <typeHandlers>
+        <typeHandler handler="org.apache.ibatis.type.ClobTypeHandler" jdbcType="CLOB" javaType="java.lang.String" />
+    </typeHandlers>
+
+</configuration>

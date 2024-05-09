@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fw.batch.oms.mappers.LabelMapper">
+
+    <insert id="insertLabelList" parameterType="java.util.List">
+        INSERT INTO label_info
+        (
+          shop_code
+          , shop_name
+          , label_code
+          , article_id
+          , article_name
+          , name
+          , battery
+          , type
+          , template_type
+          , template_manual
+          , status
+          , update_status
+          , last_response_time
+          , reg_date
+          , signals
+        ) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+                #{item.shopCode}
+              , #{item.shopName}
+              , #{item.labelCode}
+              , #{item.articleId}
+              , #{item.articleName}
+              , #{item.name}
+              , #{item.battery}
+              , #{item.type}
+              , #{item.templateType}
+              , #{item.templateManual}
+              , #{item.status}
+              , #{item.updateStatus}
+              , #{item.lastResponseTime, jdbcType=TIMESTAMP}
+              , #{item.regDate}
+              , #{item.signals}
+            )
+        </foreach>
+    </insert>
+
+
+	<delete id="deleteAllLabelList">
+		TRUNCATE TABLE label_info
+	</delete>
+
+	<delete id="deleteLabelListByMart" parameterType="String">
+    delete from label_info
+    where shop_code = #{shopCode}
+	</delete>
+
+  <select id="selectLabelList" parameterType="String" resultType="com.fw.batch.oms.dto.LabelDto">
+    SELECT
+      id
+      , shop_code
+      , shop_name
+      , label_code
+      , article_id
+      , article_name
+      , name
+      , battery
+      , signals
+      , type
+      , template_type
+      , template_manual
+      , status
+      , update_status
+      , last_response_time
+      FROM label_info
+     WHERE 1=1
+      <if test="shopCode != null">
+        AND shop_code = #{shopCode}
+      </if>
+</select>
+</mapper>
