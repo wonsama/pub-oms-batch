@@ -93,15 +93,15 @@ public class LabelSchedule implements SchedulingConfigurer {
 
       LabelDto dto = new LabelDto();
 
-      dto.setBattery(label.get("battery").toString());
-      dto.setLabelCode(label.get("labelCode").toString()); // labelCode
+      dto.setBattery(label.get("battery").toString().replaceAll("\"", ""));
+      dto.setLabelCode(label.get("labelCode").toString().replaceAll("\"", "")); // labelCode
 
       dto.setShopCode(shopCode);
       dto.setShopName(shopName);
-      dto.setSignals(label.get("signal").toString()); // signal 은 예약어여서 signals 로 변경
+      dto.setSignals(label.get("signal").toString().replaceAll("\"", "")); // signal 은 예약어여서 signals 로 변경
 
-      dto.setType(label.get("type").toString());
-      dto.setUpdateStatus(label.get("updateStatus").toString());
+      dto.setType(label.get("type").toString().replaceAll("\"", ""));
+      dto.setUpdateStatus(label.get("updateStatus").toString().replaceAll("\"", ""));
 
       // timestamp
       // Timestamp format must be yyyy-mm-dd hh:mm:ss[.fffffffff]
@@ -123,8 +123,8 @@ public class LabelSchedule implements SchedulingConfigurer {
       JsonArray articleList = label.getAsJsonArray("articleList");
       if (articleList.size() > 0) {
         JsonObject article = articleList.get(0).getAsJsonObject();
-        dto.setArticleId(article.get("articleId").toString());
-        dto.setArticleName(article.get("articleName").toString());
+        dto.setArticleId(article.get("articleId").toString().replaceAll("\"", ""));
+        dto.setArticleName(article.get("articleName").toString().replaceAll("\"", ""));
       } else {
         dto.setArticleId("");
         dto.setArticleName("");
@@ -132,7 +132,7 @@ public class LabelSchedule implements SchedulingConfigurer {
 
       // gateway
       JsonObject gateway = label.getAsJsonObject("gateway");
-      dto.setName(gateway.get("name").toString());
+      dto.setName(gateway.get("name").toString().replaceAll("\"", ""));
       String status = gateway.get("status").toString();
       if (status.equalsIgnoreCase("CONNECTED")) {
         dto.setStatus("ONLINE");
@@ -144,7 +144,7 @@ public class LabelSchedule implements SchedulingConfigurer {
       JsonArray templateType = label.getAsJsonArray("templateType");
       if (templateType.size() > 0) {
         String templateTypeStr = templateType.get(0).toString();
-        dto.setTemplateType(templateTypeStr);
+        dto.setTemplateType(templateTypeStr.replaceAll("\"", ""));
         dto.setTemplateManual("TRUE");
       } else {
         dto.setTemplateType("");
