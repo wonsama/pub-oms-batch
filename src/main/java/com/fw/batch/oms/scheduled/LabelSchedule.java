@@ -55,8 +55,8 @@ public class LabelSchedule implements SchedulingConfigurer {
         String res = HttpHelper.requestGet(API_URL_GET_LABEL_LIST);
         List<LabelDto> list = parseLabelInfo(res);
 
-        // labelService.deleteAllLabelList();
-        labelService.deleteLabelListByMart("FFFF");
+        labelService.deleteAllLabelList();
+        // labelService.deleteLabelListByMart("FFFF");
         labelService.insertLabelList(list);
 
         List<LabelDto> results = labelService.selectLabelList("FFFF");
@@ -108,8 +108,13 @@ public class LabelSchedule implements SchedulingConfigurer {
       String lastResponseTime = label.get("lastResponseTime").toString();
       if (lastResponseTime != null && lastResponseTime.length() > 0) {
         lastResponseTime = lastResponseTime.split("\\+")[0].replace("T", " ").replace("\"", "");
-        final Timestamp _lastResponseTime = Timestamp.valueOf(lastResponseTime);
-        dto.setLastResponseTime(_lastResponseTime);
+        try {
+          final Timestamp _lastResponseTime = Timestamp.valueOf(lastResponseTime);
+          dto.setLastResponseTime(_lastResponseTime);
+        } catch (Exception e) {
+          log.error("lastResponseTime parse error : {}", lastResponseTime); // 시간 부분 값이 - 로 되어 있는 경우 존재
+        }
+
       } else {
         dto.setLastResponseTime(null);
       }
@@ -150,7 +155,7 @@ public class LabelSchedule implements SchedulingConfigurer {
       SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
       dto.setRegDate(sdf.format(new Date()));
 
-      log.info("dto : {}", dto);
+      // log.info("dto : {}", dto);
 
       list.add(dto);
     }
