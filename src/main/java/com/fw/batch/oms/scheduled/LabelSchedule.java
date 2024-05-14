@@ -42,11 +42,21 @@ public class LabelSchedule implements SchedulingConfigurer {
   @Value("${api.cron.get_label_list}")
   private String API_CRON_GET_LABEL_LIST;
 
+  @Value("${api.cron.enable}")
+  private String API_CRON_ENABLE;
+
   @Autowired
   private LabelSerivce labelService;
 
   @Override
   public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
+
+    if (API_CRON_ENABLE == null || !API_CRON_ENABLE.equalsIgnoreCase("TRUE")) {
+      log.info("API_CRON_ENABLE is DISABLED");
+      return;
+    } else {
+      log.info("API_CRON_ENABLE is ENABLED");
+    }
 
     taskRegistrar.addTriggerTask(new Runnable() {
       @Override

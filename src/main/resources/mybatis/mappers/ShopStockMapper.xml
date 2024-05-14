@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fw.batch.oms.mappers.ShopStockMapper">
+
+  <select id="selectStocktakingList" parameterType="String" resultType="com.fw.batch.oms.dto.ShopStockDto">
+    select
+      w.str_id, -- 매장아이디
+      (select str_nm from oprt_str_mngm where str_id=w.str_id) str_nm, -- 매장명
+      w.work_stts_code, -- 작업상태코드
+      (select code_nm from syst_code_dtl_mngm where prnt_code_id='STCK_STTS' and code_id=w.work_stts_code) work_stts_code_nm,
+      w.gtwy_qntt, -- 게이트웨이수량
+      w.work_cmpl_date, -- 작업완료일
+      b.bay_type_code, -- 매대유형코드
+      (select code_nm from syst_code_dtl_mngm where prnt_code_id='BAY_TYPE' and code_id =b.bay_type_code) bay_type_code_nm,
+      b.bay_nm, -- 매대명
+      b.xpsr_rdr, -- 노출순서
+      t.stck_inch_code, -- 재고인치코드
+      (select code_nm from syst_code_dtl_mngm where prnt_code_id='STCK_NCH' and code_id =t.stck_inch_code) stck_inch_code_nm,
+      t.stck_clr_code, -- 재고색상코드
+      (select code_nm from syst_code_dtl_mngm where prnt_code_id='STCK_CLR' and code_id =t.stck_clr_code) stck_clr_code_nm,
+      t.wrkr_pre_qntt, -- 작업자사전체크수량
+      r.lbl_id, -- 라벨아이디
+      r.rgst_date, -- 등록일
+      case
+          when t.stck_inch_code='TAG_16' and t.stck_clr_code='WHT' then 1
+          when t.stck_inch_code='TAG_16' and t.stck_clr_code='BLK' then 2
+          when t.stck_inch_code='TAG_22' and t.stck_clr_code='WHT' then 3
+          else 4
+      end tag_rdr -- 태그노출순서
+    from
+      nvnt_stck_work w,
+      nvnt_stck_bay b,
+      nvnt_stck_bay_tag t,
+      nvnt_stck_rslt r
+    WHERE 1=1
+      and w.str_id =  #{strId} -- 매장아이디
+      and b.work_id = w.id
+      and t.bay_id = b.id
+      and r.bay_tag_id  = t.id
+    order by
+        b.xpsr_rdr, tag_rdr, r.rgst_date
+</select>
+</mapper>
