@@ -8,8 +8,8 @@ import lombok.Data;
 public class ShopStockDto {
   private String strId; // 매장아이디
   private String strNm; // 매장명
-  private String workSttsCode; // 작업상태코드
-  private String workSttsCodeNm; // 작업상태
+  private String stckSttsCode; // 재고조사상태코드
+  private String stckSttsCodeNm; // 재고조사상태
   private int gtwyQntt; // 게이트웨이수량
   private String workCmplDate; // 작업완료일
   private String bayTypeCode; // 매대유형코드
@@ -23,5 +23,5 @@ public class ShopStockDto {
   private int wrkrPreQntt; // 작업자사전체크수량
   private String lblId; // 라벨아이디
   private Timestamp rgstDate; // 등록일
-  private String tagRdr; // 태그노출순서
+  private int tagRdr; // 태그노출순서
 }

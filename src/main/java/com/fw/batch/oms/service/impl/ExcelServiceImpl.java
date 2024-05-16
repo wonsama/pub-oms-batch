@@ -2,38 +2,33 @@ package com.fw.batch.oms.service.impl;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
-import org.apache.poi.ss.usermodel.BorderStyle;
-import org.apache.poi.ss.usermodel.FillPatternType;
-import org.apache.poi.ss.usermodel.HorizontalAlignment;
-import org.apache.poi.ss.usermodel.IndexedColors;
-import org.apache.poi.ss.usermodel.VerticalAlignment;
-import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
-import org.apache.poi.xssf.usermodel.XSSFColor;
-import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
+import com.fw.batch.oms.dto.ShopStockBayCheckDto;
 import com.fw.batch.oms.dto.ShopStockDto;
 import com.fw.batch.oms.service.ExcelService;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.fw.batch.oms.util.XlsUtil.drawCell;
+import static com.fw.batch.oms.util.XlsUtil.getStyleBgColor;
+import static com.fw.batch.oms.util.XlsUtil.getStyleTitle;
+import static com.fw.batch.oms.util.XlsUtil.getStyleFont;
+
 @Slf4j
 @Service
 public class ExcelServiceImpl implements ExcelService {
 
-  private final String DEFAULT_FONT = "맑은 고딕";
   private final int CNT_PER_TAG = 3;
   private final int CNT_PER_BAY = 4;
 
@@ -68,40 +63,155 @@ public class ExcelServiceImpl implements ExcelService {
     String strNm = list.get(0).getStrNm();
     XSSFSheet sheet = workbook.createSheet(String.format("%s Scan 결과 값", strNm));
 
-    // 고정값 설정
-    final int MAX_XPSR_RDR = list
-        .stream()
-        .max(Comparator.comparingInt(ShopStockDto::getXpsrRdr))
-        .orElseThrow(NoSuchElementException::new).getXpsrRdr();
-
     // ! ROW 단위로 작업 수행
     // Create a new row within the sheet and return the high level representation
     // Note: If a row already exists at this position, it is removed/overwritten and
     // any existing cell is removed!
 
     // 제목
-    drawTitle(sheet, workbook, strNm, MAX_XPSR_RDR);
+    drawTitle(sheet, workbook, list);
 
     // 베이명 목록
     drawBayHeader(sheet, workbook, list);
 
-    // TAG 구분
+    // TAG 구분, Showcase Code
     drawTagCategory(sheet, workbook, list);
+
+    // 사전점검수량
+    drawEyeCheck(sheet, workbook, list);
+
+    // 합계수량(소계)
+    drawSumList(sheet, workbook, list);
+
+    // 오류체크
+    drawErrCheck(sheet, workbook, list);
 
     // 숨김 컬럼
     final int HIDDEN_COL = 0;
     sheet.setColumnHidden(HIDDEN_COL, true);
 
-    // filtered item
-    // https://www.baeldung.com/java-filter-collection-by-list
-    // List<ShopStockDto> filtered = list.stream().filter(shopStockDto ->
-    // shopStockDto.getStrId().equals(strNm))
-    // .collect(Collectors.toList());
+  }
 
-    // get max value item
+  private void drawErrCheck(XSSFSheet sheet, XSSFWorkbook workbook, List<ShopStockDto> list) {
+    // SET ROW VALUES
+    final int START_ROW = 7;
+    XSSFRow row = sheet.createRow(START_ROW);
 
-    // title merge
+    // getStyleFont(XSSFWorkbook workbook, boolean hasBorder, short fontsize,
+    // boolean hadBold,
+    // int red, int green, int blue) {
 
+    XSSFCellStyle s1 = getStyleFont(workbook, false);
+    XSSFCellStyle s2 = getStyleFont(workbook, true, (short) 10, true, 255, 0, 0);
+
+    drawCell(row, 0, "입력X", s1);
+    drawCell(row, 1, "오류체크", s2);
+
+  }
+
+  private void drawSumList(XSSFSheet sheet, XSSFWorkbook workbook, List<ShopStockDto> list) {
+
+    // SET ROW VALUES
+    final int START_ROW = 6;
+    XSSFRow row = sheet.createRow(START_ROW);
+
+    XSSFCellStyle s1 = getStyleBgColor(workbook, 210, 251, 199); // lime
+    XSSFCellStyle s2 = getStyleFont(workbook);
+    XSSFCellStyle s3 = getStyleFont(workbook, false);
+
+    drawCell(row, 1, "소계", s1);
+    drawCell(row, 0, "입력X", s3);
+
+    List<ShopStockBayCheckDto> checkList = list.stream()
+        .map(m -> new ShopStockBayCheckDto(m.getXpsrRdr(), m.getTagRdr(),
+            m.getWrkrPreQntt())) // 정렬순서, 태그노출순서,
+        // 작업자사전체크수량
+        .distinct().collect(Collectors.toList());
+
+    List<Integer> totalList = list.stream()
+        .map(m -> m.getXpsrRdr()) // 정렬순서
+        .distinct().collect(Collectors.toList());
+
+    for (int i = 0; i < totalList.size(); i++) {
+
+      int xpsrRdr = totalList.get(i);
+      for (int j = 0; j < CNT_PER_BAY; j++) { // x4 = 12
+        // final int startCol = 2 + CNT_PER_TAG * i + j * CNT_PER_BAY * CNT_PER_TAG;
+        final int startCol = 2 + i * CNT_PER_TAG * CNT_PER_BAY + j * CNT_PER_TAG;
+
+        // 사전 점검수량 정보 반환
+        ShopStockBayCheckDto eye = getEyeCheck(checkList, xpsrRdr, j);
+
+        // x3
+        if (eye == null) {
+          drawCell(row, startCol, "-", s1);
+        } else {
+          drawCell(row, startCol, eye.getWrkrPreQntt(), s1);
+        }
+
+        drawCell(row, startCol + 1, "Scan", s2);
+        drawCell(row, startCol + 2, "Matching", s2);
+
+      }
+    }
+  }
+
+  private void drawEyeCheck(XSSFSheet sheet, XSSFWorkbook workbook, List<ShopStockDto> list) {
+    // SET ROW VALUES
+    final int START_ROW = 5;
+    XSSFRow row = sheet.createRow(START_ROW);
+
+    XSSFCellStyle s1 = getStyleBgColor(workbook, 242, 207, 237); // pink
+    XSSFCellStyle s2 = getStyleFont(workbook);
+
+    drawCell(row, 1, "사전 eye\n체크 수량", s1);
+
+    List<ShopStockBayCheckDto> checkList = list.stream()
+        .map(m -> new ShopStockBayCheckDto(m.getXpsrRdr(), m.getTagRdr(),
+            m.getWrkrPreQntt())) // 정렬순서, 태그노출순서,
+        // 작업자사전체크수량
+        .distinct().collect(Collectors.toList());
+
+    List<Integer> totalList = list.stream()
+        .map(m -> m.getXpsrRdr()) // 정렬순서
+        .distinct().collect(Collectors.toList());
+
+    for (int i = 0; i < totalList.size(); i++) {
+
+      int xpsrRdr = totalList.get(i);
+      for (int j = 0; j < CNT_PER_BAY; j++) { // x4 = 12
+        // final int startCol = 2 + CNT_PER_TAG * i + j * CNT_PER_BAY * CNT_PER_TAG;
+        final int startCol = 2 + i * CNT_PER_TAG * CNT_PER_BAY + j * CNT_PER_TAG;
+
+        // 사전 점검수량 정보 반환
+        ShopStockBayCheckDto eye = getEyeCheck(checkList, xpsrRdr, j);
+
+        // x3
+        if (eye == null) {
+          drawCell(row, startCol, "-", s1);
+        } else {
+          drawCell(row, startCol, eye.getWrkrPreQntt(), s1);
+        }
+        drawCell(row, startCol + 1, "검증", s2);
+        drawCell(row, startCol + 2, "", s2);
+
+        // MERGE ROWS
+        sheet.addMergedRegion(new CellRangeAddress(START_ROW, START_ROW, startCol + 1, startCol + 2));
+      }
+
+    }
+
+  }
+
+  private ShopStockBayCheckDto getEyeCheck(List<ShopStockBayCheckDto> checkList, int xpsrRdr, int idx) {
+    List<ShopStockBayCheckDto> item = checkList.stream()
+        .filter(dto -> (dto.getXpsrRdr() == xpsrRdr && dto.getTagRdr() == idx + 1))
+        .collect(Collectors.toList());
+    if (item.isEmpty()) {
+      return null;
+    } else {
+      return item.get(0);
+    }
   }
 
   private void drawTagCategory(XSSFSheet sheet, XSSFWorkbook workbook, List<ShopStockDto> list) {
@@ -109,35 +219,58 @@ public class ExcelServiceImpl implements ExcelService {
     final int START_ROW_1 = 2;
     XSSFRow row1 = sheet.createRow(START_ROW_1);
 
-    XSSFCell c1 = row1.createCell(0);
-    XSSFCellStyle s1 = getStyleFont10(workbook, false);
-    c1.setCellValue("입력X");
-    c1.setCellStyle(s1);
+    XSSFCellStyle s1 = getStyleFont(workbook, false);
+    XSSFCellStyle s2 = getStyleFont(workbook);
 
-    XSSFCell c2 = row1.createCell(1);
-    XSSFCellStyle s2 = getStyleFont10(workbook);
-    c2.setCellValue("Tag 구분");
-    c2.setCellStyle(s2);
+    drawCell(row1, 0, "입력X", s1);
+    drawCell(row1, 1, "Tag 구분", s2);
+
+    // SET ROW VALUES
+    final int START_ROW_2 = 3;
+    XSSFRow row2 = sheet.createRow(START_ROW_2);
+
+    drawCell(row2, 0, "입력X", s1);
+    drawCell(row2, 1, "", s2);
+
+    // SET ROW VALUES
+    final int START_ROW_3 = 4;
+    XSSFRow row3 = sheet.createRow(START_ROW_3);
+    drawCell(row3, 0, "입력X", s1);
+    drawCell(row3, 1, "Showcase Code", s2);
 
     // LOOP FOR BAY SIZE
     List<String> bayNmList = list.stream().map(m -> m.getBayNm()).distinct().collect(Collectors.toList());
     for (int i = 0; i < bayNmList.size(); i++) {
       // 3 size
       for (int j = 0; j < CNT_PER_BAY; j++) {
-        XSSFCell c3 = row1.createCell(2 + CNT_PER_TAG * CNT_PER_BAY * i + j * CNT_PER_TAG);
-        c3.setCellStyle(s2);
-        c3.setCellValue(j < 2 ? "1.6\"" : "2.2\"");
-        XSSFCell c4 = row1.createCell(2 + CNT_PER_TAG * CNT_PER_BAY * i + j * CNT_PER_TAG + 1);
-        c4.setCellStyle(s2);
-        XSSFCell c5 = row1.createCell(2 + CNT_PER_TAG * CNT_PER_BAY * i + j * CNT_PER_TAG + 2);
-        c5.setCellStyle(s2);
-        c5.setCellValue(3);
-        // XSSFCell c6 = row1.createCell(2 + CNT_PER_TAG * CNT_PER_BAY * i + j *
-        // CNT_PER_BAY + 3);
-        // c6.setCellStyle(s2);
-        // c6.setCellValue(3);
+        final int startCol = 2 + CNT_PER_TAG * CNT_PER_BAY * i + j * CNT_PER_TAG;
+
+        drawCell(row1, startCol, j < 2 ? "1.6\"" : "2.2\"", s2);
+        drawCell(row1, startCol + 1, "", s2);
+        drawCell(row1, startCol + 2, "", s2);
+
+        // MERGE ROWS
+        sheet.addMergedRegion(new CellRangeAddress(START_ROW_1, START_ROW_1, startCol, startCol + 2));
+
+        drawCell(row2, startCol, j % 2 == 0 ? "White" : "Black", s2);
+        drawCell(row2, startCol + 1, "", s2);
+        drawCell(row2, startCol + 2, "", s2);
+
+        // MERGE ROWS
+        sheet.addMergedRegion(new CellRangeAddress(START_ROW_2, START_ROW_2, startCol, startCol + 2));
+
+        drawCell(row3, startCol, "SC", s2);
+        drawCell(row3, startCol + 1, "", s2);
+        drawCell(row3, startCol + 2, "", s2);
+
+        // MERGE ROWS
+        sheet.addMergedRegion(new CellRangeAddress(START_ROW_3, START_ROW_3, startCol, startCol + 2));
       }
     }
+
+    // MERGE COLS
+    sheet.addMergedRegion(new CellRangeAddress(2, 3, 1, 1));
+
   }
 
   private void drawBayHeader(XSSFSheet sheet, XSSFWorkbook workbook, List<ShopStockDto> list) {
@@ -147,24 +280,18 @@ public class ExcelServiceImpl implements ExcelService {
     // SET ROW VALUES
     final int START_ROW = 1;
     XSSFRow row = sheet.createRow(START_ROW);
+    XSSFCellStyle s1 = getStyleFont(workbook);
 
-    XSSFCell c1 = row.createCell(1);
-    XSSFCellStyle s1 = getStyleFont10(workbook);
-    c1.setCellValue("매대");
-    c1.setCellStyle(s1);
-
-    log.info("bayNmList.size() : " + bayNmList.size());
+    drawCell(row, 1, "매대", s1);
 
     for (int i = 0; i < bayNmList.size(); i++) {
       int startCol = 2 + CNT_PER_TAG * CNT_PER_BAY * i;
-      log.info("startCol : " + startCol);
-      XSSFCell c2 = row.createCell(startCol);
-      c2.setCellValue(bayNmList.get(i));
-      c2.setCellStyle(s1);
 
-      for (int j = 0; j < CNT_PER_TAG * CNT_PER_BAY; j++) {
-        XSSFCell c3 = row.createCell(startCol + j + 1);
-        c3.setCellStyle(s1);
+      final String bayNm = bayNmList.get(i);
+      drawCell(row, startCol, bayNm, s1);
+
+      for (int j = 0; j < CNT_PER_TAG * CNT_PER_BAY - 1; j++) {
+        drawCell(row, startCol + j + 1, "", s1);
       }
 
       // MERGE ROWS
@@ -173,106 +300,26 @@ public class ExcelServiceImpl implements ExcelService {
     }
   }
 
-  private void drawTitle(XSSFSheet sheet, XSSFWorkbook workbook, String strNm, int MAX_XPSR_RDR) {
+  private void drawTitle(XSSFSheet sheet, XSSFWorkbook workbook, List<ShopStockDto> list) {
 
+    // 고정값 설정
+    final int MAX_XPSR_RDR = list
+        .stream()
+        .max(Comparator.comparingInt(ShopStockDto::getXpsrRdr))
+        .orElseThrow(NoSuchElementException::new).getXpsrRdr();
     final int CNT_HIDDEN_COL = 1;
-    final int CNT_LABEL_COL = 1;
-
-    int maxColumn = CNT_HIDDEN_COL + CNT_LABEL_COL + (MAX_XPSR_RDR * CNT_PER_TAG * CNT_PER_BAY);
+    final int maxColumn = CNT_HIDDEN_COL + ((MAX_XPSR_RDR - 1) * CNT_PER_TAG * CNT_PER_BAY);
 
     // SET ROW VALUES
     final int START_ROW = 0;
     XSSFRow row = sheet.createRow(START_ROW);
-    XSSFCell c1 = row.createCell(1);
-    c1.setCellValue(String.format("%s ESL Tag ID 조사 결과 현황", strNm));
-
-    // SET CELL STYLE
     XSSFCellStyle s1 = getStyleTitle(workbook);
-    c1.setCellStyle(s1);
+
+    String strNm = list.get(0).getStrNm();
+    drawCell(row, 1, String.format("%s ESL Tag ID 조사 결과 현황", strNm), s1);
 
     // MERGE ROWS
     sheet.addMergedRegion(new CellRangeAddress(0, 0, 1, maxColumn));
-  }
-
-  private XSSFCellStyle getStyleTitle(XSSFWorkbook workbook) {
-    XSSFCellStyle cellStyle = workbook.createCellStyle();
-    XSSFFont font = workbook.createFont();
-    font.setFontHeightInPoints((short) 20);
-    font.setFontName(DEFAULT_FONT);
-    font.setBold(true);
-    cellStyle.setFont(font);
-
-    cellStyle.setBorderBottom(BorderStyle.THIN);
-    cellStyle.setBorderTop(BorderStyle.THIN);
-    cellStyle.setBorderLeft(BorderStyle.THIN);
-    cellStyle.setBorderRight(BorderStyle.THIN);
-
-    cellStyle.setAlignment(HorizontalAlignment.LEFT);
-
-    return cellStyle;
-  }
-
-  private XSSFCellStyle getStyleFont10(XSSFWorkbook workbook) {
-    return getStyleFont10(workbook, true);
-  }
-
-  private XSSFCellStyle getStyleFont10(XSSFWorkbook workbook, boolean hasBorder) {
-    XSSFCellStyle cellStyle = workbook.createCellStyle();
-    XSSFFont font = workbook.createFont();
-    font.setFontHeightInPoints((short) 10);
-    font.setFontName(DEFAULT_FONT);
-    cellStyle.setFont(font);
-
-    if (hasBorder) {
-      cellStyle.setBorderBottom(BorderStyle.THIN);
-      cellStyle.setBorderTop(BorderStyle.THIN);
-      cellStyle.setBorderLeft(BorderStyle.THIN);
-      cellStyle.setBorderRight(BorderStyle.THIN);
-    }
-
-    cellStyle.setAlignment(HorizontalAlignment.CENTER);
-    cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
-
-    return cellStyle;
-  }
-
-  // font.setFontName("Arial");
-  // font.setBold(true);
-  // font.setItalic(true);
-  // font.setFontHeightInPoints((short) 14);
-
-  // private XSSFCellStyle createCellStyle(XSSFWorkbook workbook) {
-
-  // // CREATE CELL STYLE
-  // XSSFCellStyle cellStyle = workbook.createCellStyle();
-
-  // // SET FONT
-  // XSSFFont font = workbook.createFont();
-  // font.setFontHeightInPoints((short) 20);
-
-  // // SET FONT COLOR
-  // font.setColor(getColor(255, 0, 0));
-  // cellStyle.setFont(font);
-
-  // // Set border
-  // // cellStyle.setBorderBottom(BorderStyle.THICK);
-  // // cellStyle.setBorderTop(BorderStyle.THICK);
-  // // cellStyle.setBorderLeft(BorderStyle.THICK);
-  // // cellStyle.setBorderRight(BorderStyle.THICK);
-
-  // // Set background color
-  // // cellStyle.setFillForegroundColor(IndexedColors.YELLOW.getIndex());
-  // // cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-
-  // // Set horizontal alignment
-  // cellStyle.setAlignment(HorizontalAlignment.LEFT);
-
-  // return cellStyle;
-  // }
-
-  private XSSFColor getColor(int red, int green, int blue) {
-    byte[] rgb = new byte[] { (byte) red, (byte) green, (byte) blue };
-    return new XSSFColor(rgb, null);
   }
 
 }

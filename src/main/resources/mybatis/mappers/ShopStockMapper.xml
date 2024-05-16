@@ -4,12 +4,12 @@
 
   <select id="selectStocktakingList" parameterType="String" resultType="com.fw.batch.oms.dto.ShopStockDto">
     select
-      w.str_id, -- 매장아이디
-      (select str_nm from oprt_str_mngm where str_id=w.str_id) str_nm, -- 매장명
-      w.work_stts_code, -- 작업상태코드
-      (select code_nm from syst_code_dtl_mngm where prnt_code_id='STCK_STTS' and code_id=w.work_stts_code) work_stts_code_nm,
-      w.gtwy_qntt, -- 게이트웨이수량
-      w.work_cmpl_date, -- 작업완료일
+      m.str_id, -- 매장아이디
+      (select str_nm from oprt_str_mngm where str_id=m.str_id) str_nm, -- 매장명
+      m.stck_stts_code, -- 재고조사상태코드
+      (select code_nm from syst_code_dtl_mngm where prnt_code_id='STCK_STTS' and code_id=m.stck_stts_code) stck_stts_code_nm, -- 재고조사상태
+      m.gtwy_qntt, -- 게이트웨이수량
+      m.stck_cmpl_date, -- 작업완료일
       b.bay_type_code, -- 매대유형코드
       (select code_nm from syst_code_dtl_mngm where prnt_code_id='BAY_TYPE' and code_id =b.bay_type_code) bay_type_code_nm,
       b.bay_nm, -- 매대명
@@ -28,13 +28,13 @@
           else 4
       end tag_rdr -- 태그노출순서
     from
-      nvnt_stck_work w,
+      nvnt_stck_mngm m,
       nvnt_stck_bay b,
       nvnt_stck_bay_tag t,
       nvnt_stck_rslt r
     WHERE 1=1
-      and w.str_id =  #{strId} -- 매장아이디
-      and b.work_id = w.id
+      and m.str_id = #{strId} -- 매장아이디
+      and b.stck_id = m.id
       and t.bay_id = b.id
       and r.bay_tag_id  = t.id
     order by
