@@ -1,19 +1,31 @@
 package com.fw.batch.oms.util;
 
 import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class XlsUtil {
 
   private static final String DEFAULT_FONT = "맑은 고딕";
+
+  public static int getIntValue(Cell cell) {
+    return getIntValue(cell, 0);
+  }
+
+  public static int getIntValue(Cell cell, int defaultValue) {
+    int v = (int) cell.getNumericCellValue();
+    return v;
+  }
 
   public static XSSFCell drawCell(XSSFRow row, int col, int value, XSSFCellStyle style) {
     XSSFCell cell = row.createCell(col);
@@ -105,5 +117,18 @@ public class XlsUtil {
     cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 
     return cellStyle;
+  }
+
+  public static Cell getCell(XSSFSheet sheet, int rowNum, int colNum) {
+    Row row = sheet.getRow(rowNum);
+    if (row == null) {
+      throw new RuntimeException("Row is null");
+      // row = sheet.createRow(rowNum);
+    }
+    Cell cell = row.getCell(colNum);
+    if (cell == null) {
+      cell = row.createCell(colNum);
+    }
+    return cell;
   }
 }

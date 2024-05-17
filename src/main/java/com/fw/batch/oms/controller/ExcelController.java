@@ -12,34 +12,30 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fw.batch.oms.dto.ShopStockDto;
 import com.fw.batch.oms.service.ExcelService;
-import com.fw.batch.oms.service.ShopStockService;
 
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
 @RestController
 public class ExcelController {
 
   @Autowired
   private ExcelService excelService;
 
-  @Autowired
-  private ShopStockService shopStockService;
+  // @Autowired
+  // private ShopStockService shopStockService;
 
   @GetMapping("/download/stock/{strId}")
   public ResponseEntity<byte[]> downloadStock(@PathVariable String strId)
       throws IOException, IllegalArgumentException {
 
-    List<ShopStockDto> list = shopStockService.selectStocktakingList(strId); // http://localhost:8080/download/stock/ST2404030141
+    // List<ShopStockDto> list = shopStockService.selectStocktakingList(strId); //
+    // http://localhost:8080/download/stock/ST2404030141
 
-    if (list.size() > 0) {
-      log.info("list last item : " + list.get(list.size() - 1));
-    }
-    log.info("list size : " + list.size());
+    // if (list.size() > 0) {
+    // log.info("list last item : " + list.get(list.size() - 1));
+    // }
+    // log.info("list size : " + list.size());
 
-    ByteArrayOutputStream outputStream = excelService.generateExcelSheet(list);
+    ByteArrayOutputStream outputStream = excelService.generateExcelSheet();
 
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
