@@ -6,10 +6,13 @@ import org.apache.ibatis.annotations.Mapper;
 
 import com.fw.batch.oms.dto.ShopBayTagDto;
 import com.fw.batch.oms.dto.ShopStockDto;
+import com.fw.batch.oms.dto.ShopStockInfoDto;
 
 @Mapper
 public interface ShopStockMapper {
-  public List<ShopStockDto> selectStocktakingList(String strId);
+  public List<ShopStockDto> selectStocktakingList(String id);
 
-  public List<ShopBayTagDto> selectBayTagList(String strId);
+  public List<ShopBayTagDto> selectBayTagList(String id);
+
+  public List<ShopStockInfoDto> selectStockInfo(String id);
 }

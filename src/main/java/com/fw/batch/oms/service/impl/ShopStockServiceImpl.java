@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.fw.batch.oms.dto.ShopBayTagDto;
 import com.fw.batch.oms.dto.ShopStockDto;
+import com.fw.batch.oms.dto.ShopStockInfoDto;
 import com.fw.batch.oms.mappers.ShopStockMapper;
 import com.fw.batch.oms.service.ShopStockService;
 
@@ -16,12 +17,16 @@ public class ShopStockServiceImpl implements ShopStockService {
   @Autowired
   private ShopStockMapper shopStockMapper;
 
-  public List<ShopStockDto> selectStocktakingList(String strId) {
-    return shopStockMapper.selectStocktakingList(strId);
+  public List<ShopStockDto> selectStocktakingList(String id) {
+    return shopStockMapper.selectStocktakingList(id);
   }
 
-  public List<ShopBayTagDto> selectBayTagList(String strId) {
-    return shopStockMapper.selectBayTagList(strId);
+  public List<ShopBayTagDto> selectBayTagList(String id) {
+    return shopStockMapper.selectBayTagList(id);
+  }
+
+  public List<ShopStockInfoDto> selectStockInfo(String id) {
+    return shopStockMapper.selectStockInfo(id);
   }
 
 }

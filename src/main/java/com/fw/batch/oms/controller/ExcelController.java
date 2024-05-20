@@ -2,7 +2,6 @@ package com.fw.batch.oms.controller;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -23,8 +22,8 @@ public class ExcelController {
   // @Autowired
   // private ShopStockService shopStockService;
 
-  @GetMapping("/download/stock/{strId}")
-  public ResponseEntity<byte[]> downloadStock(@PathVariable String strId)
+  @GetMapping("/download/stock/{id}")
+  public ResponseEntity<byte[]> downloadStock(@PathVariable String id)
       throws IOException, IllegalArgumentException {
 
     // List<ShopStockDto> list = shopStockService.selectStocktakingList(strId); //
@@ -35,7 +34,7 @@ public class ExcelController {
     // }
     // log.info("list size : " + list.size());
 
-    ByteArrayOutputStream outputStream = excelService.generateExcelSheet();
+    ByteArrayOutputStream outputStream = excelService.generateExcelSheet(id);
 
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);

@@ -6,6 +6,7 @@ import lombok.Data;
 
 @Data
 public class ShopBayTagDto {
+  private String id; // 재고조사아이디
   private String strId; // 매장아이디
   private String strNm; // 매장명
   private String stckSttsCode; // 재고조사상태코드

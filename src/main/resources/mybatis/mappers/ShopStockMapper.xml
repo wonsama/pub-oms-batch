@@ -27,14 +27,14 @@
           else 4
       end tag_rdr, -- 태그노출순서
       r.scan_yn, -- 스캔여부
- 	    r.mtch_yn -- 매치여부
+      r.mtch_yn -- 매치여부
     from
       nvnt_stck_mngm m,
       nvnt_stck_bay b,
       nvnt_stck_bay_tag t,
       nvnt_stck_rslt r
     WHERE 1=1
-      and m.str_id = #{strId} -- 매장아이디
+      and m.id = #{id} -- 재고조사아이디
       and b.stck_id = m.id
       and t.bay_id = b.id
       and r.bay_tag_id  = t.id
@@ -43,37 +43,58 @@
   </select>
   <select id="selectBayTagList" parameterType="String" resultType="com.fw.batch.oms.dto.ShopBayTagDto">
     select
-    m.str_id, -- 매장아이디
-    (select str_nm from oprt_str_mngm where str_id=m.str_id) str_nm, -- 매장명
-    m.stck_stts_code, -- 재고조사상태코드
-    (select code_nm from syst_code_dtl_mngm where prnt_code_id='STCK_STTS' and code_id=m.stck_stts_code) stck_stts_code_nm, -- 재고조사상태
-    m.gtwy_qntt, -- 게이트웨이수량
-    m.stck_cmpl_date, -- 작업완료일
-    b.bay_type_code, -- 매대유형코드
-    (select code_nm from syst_code_dtl_mngm where prnt_code_id='BAY_TYPE' and code_id =b.bay_type_code) bay_type_code_nm,
-    b.bay_nm, -- 매대명
-    b.xpsr_rdr, -- 노출순서
-    t.stck_inch_code, -- 재고인치코드
-    (select code_nm from syst_code_dtl_mngm where prnt_code_id='STCK_NCH' and code_id =t.stck_inch_code) stck_inch_code_nm,
-    t.stck_clr_code, -- 재고색상코드
-    (select code_nm from syst_code_dtl_mngm where prnt_code_id='STCK_CLR' and code_id =t.stck_clr_code) stck_clr_code_nm,
-    t.wrkr_pre_qntt, -- 작업자사전체크수량
-    case
-        when t.stck_inch_code='TAG_16' and t.stck_clr_code='WHT' then 1
-        when t.stck_inch_code='TAG_16' and t.stck_clr_code='BLCK' then 2
-        when t.stck_inch_code='TAG_22' and t.stck_clr_code='WHT' then 3
-        else 4
-    end tag_rdr -- 태그노출순서
-
-
-  from
-    nvnt_stck_mngm m,
-    nvnt_stck_bay b,
-    nvnt_stck_bay_tag t
-
-  WHERE 1=1
-    and m.str_id = #{strId} -- 매장아이디
-    and b.stck_id = m.id
-    and t.bay_id = b.id
+      m.str_id, -- 매장아이디
+      (select str_nm from oprt_str_mngm where str_id=m.str_id) str_nm, -- 매장명
+      m.stck_stts_code, -- 재고조사상태코드
+      (select code_nm from syst_code_dtl_mngm where prnt_code_id='STCK_STTS' and code_id=m.stck_stts_code) stck_stts_code_nm, -- 재고조사상태
+      m.gtwy_qntt, -- 게이트웨이수량
+      m.stck_cmpl_date, -- 작업완료일
+      b.bay_type_code, -- 매대유형코드
+      (select code_nm from syst_code_dtl_mngm where prnt_code_id='BAY_TYPE' and code_id =b.bay_type_code) bay_type_code_nm,
+      b.bay_nm, -- 매대명
+      b.xpsr_rdr, -- 노출순서
+      t.stck_inch_code, -- 재고인치코드
+      (select code_nm from syst_code_dtl_mngm where prnt_code_id='STCK_NCH' and code_id =t.stck_inch_code) stck_inch_code_nm,
+      t.stck_clr_code, -- 재고색상코드
+      (select code_nm from syst_code_dtl_mngm where prnt_code_id='STCK_CLR' and code_id =t.stck_clr_code) stck_clr_code_nm,
+      t.wrkr_pre_qntt, -- 작업자사전체크수량
+      case
+          when t.stck_inch_code='TAG_16' and t.stck_clr_code='WHT' then 1
+          when t.stck_inch_code='TAG_16' and t.stck_clr_code='BLCK' then 2
+          when t.stck_inch_code='TAG_22' and t.stck_clr_code='WHT' then 3
+          else 4
+      end tag_rdr -- 태그노출순서
+    from
+      nvnt_stck_mngm m,
+      nvnt_stck_bay b,
+      nvnt_stck_bay_tag t
+    WHERE 1=1
+      and m.id = #{id} -- 재고조사아이디
+      and b.stck_id = m.id
+      and t.bay_id = b.id
+  </select>
+  <select id="selectStockInfo" parameterType="String" resultType="com.fw.batch.oms.dto.ShopStockInfoDto">
+    select
+      pre_dlvr_qntt , -- 조사전 납품수량
+      pre_dtnl_dlvr_qntt , -- 조사전 추가납품수량
+      pre_etc_qntt , -- 조사전 기타수량
+      str_qntt , -- 진열대 수량
+      br_qntt , -- 백룸 수량
+      br_dfct_qntt, -- 백룸 불량수량
+      stck_inch_code, -- 재고인치코드
+      (select code_nm from syst_code_dtl_mngm where prnt_code_id='STCK_NCH' and code_id =stck_inch_code) stck_inch_code_nm,
+      stck_clr_code, -- 재고색상코드
+      (select code_nm from syst_code_dtl_mngm where prnt_code_id='STCK_CLR' and code_id =stck_clr_code) stck_clr_code_nm,
+      case
+              when stck_inch_code='TAG_16' and stck_clr_code='WHT' then 1
+              when stck_inch_code='TAG_16' and stck_clr_code='BLCK' then 2
+              when stck_inch_code='TAG_22' and stck_clr_code='WHT' then 3
+              else 4
+          end tag_rdr -- 태그노출순서
+    from
+      nvnt_stck_info
+    where
+      stck_id = #{id} -- 재고조사아이디
+    order by tag_rdr
   </select>
 </mapper>
