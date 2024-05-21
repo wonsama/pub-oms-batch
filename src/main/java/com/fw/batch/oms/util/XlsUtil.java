@@ -11,10 +11,11 @@ import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.usermodel.extensions.XSSFCellBorder.BorderSide;
 
 public class XlsUtil {
 
-  private static final String DEFAULT_FONT = "맑은 고딕";
+  public static final String DEFAULT_FONT = "맑은 고딕";
 
   public static int getIntValue(XSSFCell cell) {
     return getIntValue(cell, 0);
@@ -83,21 +84,74 @@ public class XlsUtil {
     return cellStyle;
   }
 
+  public static void updateFontColor(XSSFWorkbook workbook, XSSFCellStyle style, int red, int green, int blue,
+      boolean hasBold) {
+    XSSFFont font = style.getFont();
+    font.setColor(getColor(red, green, blue));
+    style.setFont(font);
+    font.setBold(hasBold);
+  }
+
   public static XSSFCellStyle getStyleBgColor(XSSFWorkbook workbook, int red, int green, int blue) {
+    return getStyleBgColor(workbook, red, green, blue, true);
+  }
+
+  public static XSSFCellStyle getStyleBgColor(XSSFWorkbook workbook, int red, int green, int blue, boolean hasBorder) {
     XSSFCellStyle cellStyle = workbook.createCellStyle();
     XSSFFont font = workbook.createFont();
     font.setFontHeightInPoints((short) 10);
     font.setFontName(DEFAULT_FONT);
     cellStyle.setFont(font);
 
-    cellStyle.setBorderBottom(BorderStyle.THIN);
-    cellStyle.setBorderTop(BorderStyle.THIN);
-    cellStyle.setBorderLeft(BorderStyle.THIN);
-    cellStyle.setBorderRight(BorderStyle.THIN);
+    if (hasBorder) {
+      cellStyle.setBorderBottom(BorderStyle.THIN);
+      cellStyle.setBorderTop(BorderStyle.THIN);
+      cellStyle.setBorderLeft(BorderStyle.THIN);
+      cellStyle.setBorderRight(BorderStyle.THIN);
+    }
 
     // Set background color
     cellStyle.setFillForegroundColor(getColor(red, green, blue));
     cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+    cellStyle.setAlignment(HorizontalAlignment.CENTER);
+    cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+
+    return cellStyle;
+  }
+
+  public static enum PAINT_TYPE {
+    INNER, BORDER, BOTH
+  }
+
+  public static XSSFCellStyle getStyleGrayBorder(XSSFWorkbook workbook, PAINT_TYPE type, int innerGray,
+      int borderGray) {
+    XSSFCellStyle cellStyle = workbook.createCellStyle();
+    XSSFFont font = workbook.createFont();
+    font.setFontHeightInPoints((short) 10);
+    font.setFontName(DEFAULT_FONT);
+    cellStyle.setFont(font);
+
+    final XSSFColor cgray = getColor(innerGray, innerGray, innerGray); // GRAY COLOR (217, 242)
+    final XSSFColor cgrayMore = getColor(borderGray, borderGray, borderGray); // GRAY
+    // MORE COLOR ( 198 )
+
+    if (type == PAINT_TYPE.BORDER || type == PAINT_TYPE.BOTH) {
+      cellStyle.setBorderColor(BorderSide.BOTTOM, cgrayMore);
+      cellStyle.setBorderColor(BorderSide.LEFT, cgrayMore);
+      cellStyle.setBorderColor(BorderSide.RIGHT, cgrayMore);
+      cellStyle.setBorderColor(BorderSide.TOP, cgrayMore);
+      cellStyle.setBorderBottom(BorderStyle.THIN);
+      cellStyle.setBorderTop(BorderStyle.THIN);
+      cellStyle.setBorderLeft(BorderStyle.THIN);
+      cellStyle.setBorderRight(BorderStyle.THIN);
+    }
+
+    // Set background color
+    if (type == PAINT_TYPE.INNER || type == PAINT_TYPE.BOTH) {
+      cellStyle.setFillForegroundColor(cgray);
+      cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+    }
 
     cellStyle.setAlignment(HorizontalAlignment.CENTER);
     cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
@@ -113,13 +167,13 @@ public class XlsUtil {
     return getStyleFont(workbook, hasBorder, (short) 10, false, 0, 0, 0);
   }
 
-  public static XSSFCellStyle getStyleFont(XSSFWorkbook workbook, boolean hasBorder, short fontsize, boolean hadBold,
+  public static XSSFCellStyle getStyleFont(XSSFWorkbook workbook, boolean hasBorder, short fontsize, boolean hasBold,
       int red, int green, int blue) {
     XSSFCellStyle cellStyle = workbook.createCellStyle();
     XSSFFont font = workbook.createFont();
     font.setFontHeightInPoints((short) 10);
     font.setFontName(DEFAULT_FONT);
-    font.setBold(hadBold);
+    font.setBold(hasBold);
     font.setColor(getColor(red, green, blue));
     cellStyle.setFont(font);
 

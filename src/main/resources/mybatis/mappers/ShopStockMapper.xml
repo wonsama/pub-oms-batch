@@ -29,10 +29,10 @@
       r.scan_yn, -- 스캔여부
       r.mtch_yn -- 매치여부
     from
-      nvnt_stck_mngm m,
-      nvnt_stck_bay b,
-      nvnt_stck_bay_tag t,
-      nvnt_stck_rslt r
+      nvnt_stck_mngm m, -- 재고관리 재고 조사 관리
+      nvnt_stck_bay b, -- 재고관리 재고 조사 매대
+      nvnt_stck_bay_tag t, -- 재고관리 재고 조사 매대 태그
+      nvnt_stck_rslt r -- 재고관리 재고 조사 결과
     WHERE 1=1
       and m.id = #{id} -- 재고조사아이디
       and b.stck_id = m.id
@@ -65,9 +65,9 @@
           else 4
       end tag_rdr -- 태그노출순서
     from
-      nvnt_stck_mngm m,
-      nvnt_stck_bay b,
-      nvnt_stck_bay_tag t
+      nvnt_stck_mngm m, -- 재고관리 재고 조사 관리
+      nvnt_stck_bay b, -- 재고관리 재고 조사 매대
+      nvnt_stck_bay_tag t -- 재고관리 재고 조사 매대 태그
     WHERE 1=1
       and m.id = #{id} -- 재고조사아이디
       and b.stck_id = m.id
@@ -92,9 +92,29 @@
               else 4
           end tag_rdr -- 태그노출순서
     from
-      nvnt_stck_info
+      nvnt_stck_info -- 재고관리 재고조사 정보
     where
       stck_id = #{id} -- 재고조사아이디
     order by tag_rdr
+  </select>
+  <select id="selectStockIf" parameterType="String" resultType="com.fw.batch.oms.dto.ShopStockIf">
+    SELECT
+      lbl_id -- 라벨아이디
+      , mtch_yn -- 매치여부
+      , prdc_id -- 제품아이디
+      , prdc_nm -- 제품명
+      , gtwy_nm -- 게이트웨이 이름
+      , btry_stts -- 배터리상태
+      , sgnl_stts -- 신호상태
+      , `type` -- 유형
+      , tmpl_type -- 템플릿 타입
+      , tmpl_mnl -- 템플릿 매뉴얼
+      , ntwr_stts -- 네트워크상태
+      , lbl_stts -- 라벨상태
+      , last_rspn_time -- 마지막 응답 시간
+    FROM
+      nvnt_stck_rslt_vldt -- 재고관리 재고 조사 결과 검증
+    WHERE
+      stck_id = #{id} -- 재고조사아이디
   </select>
 </mapper>
