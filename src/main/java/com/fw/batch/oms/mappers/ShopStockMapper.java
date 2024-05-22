@@ -18,4 +18,6 @@ public interface ShopStockMapper {
   public List<ShopStockInfoDto> selectStockInfo(String id);
 
   public List<ShopStockIf> selectStockIf(String id);
+
+  public List<ShopStockIf> selectIfLabelList(String strId);
 }

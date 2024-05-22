@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class ShopStockIf {
+  private String strId; // 매장 아이디
   private String stckId; // 재고조사 아이디
   private String lblId; // 라벨아이디
   private String mtchYn; // 매치여부

@@ -5,4 +5,6 @@ import java.io.IOException;
 
 public interface ExcelService {
   public ByteArrayOutputStream generateExcelSheet(String id) throws IOException, IllegalArgumentException;
+
+  public ByteArrayOutputStream generateLabelList(String strId) throws IOException, IllegalArgumentException;
 }

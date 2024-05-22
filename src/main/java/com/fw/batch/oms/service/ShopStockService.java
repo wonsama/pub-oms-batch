@@ -16,4 +16,5 @@ public interface ShopStockService {
 
   public List<ShopStockIf> selectStockIf(String id);
 
+  public List<ShopStockIf> selectIfLabelList(String strId);
 }

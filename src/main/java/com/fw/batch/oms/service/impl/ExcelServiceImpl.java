@@ -23,8 +23,45 @@ public class ExcelServiceImpl implements ExcelService {
   @Autowired
   ShopStockService shopStockService;
 
-  public ByteArrayOutputStream generateExcelSheet(String id)
-      throws IOException, IllegalArgumentException {
+  /**
+   * 매장 IF결과 라벨 리스트 다운로드
+   *
+   * @param strId
+   * @return
+   * @throws IOException
+   * @throws IllegalArgumentException
+   */
+  public ByteArrayOutputStream generateLabelList(String strId) throws IOException, IllegalArgumentException {
+
+    log.info("step 1-1 : query data from DB");
+
+    List<ShopStockIf> ifs = shopStockService.selectIfLabelList(strId);
+
+    log.info("step 1-2 : query result check");
+
+    if (ifs == null || ifs.size() == 0) {
+      // 데이터가 없는 경우 별도의 엑셀 시트를 생성하지 않는다. 오류 발생
+      throw new IllegalArgumentException("labels is empty");
+    }
+
+    log.info("step 2 : create workbook & sheet");
+
+    XSSFWorkbook workbook = new XSSFWorkbook();
+
+    ExcelLabelList.createSheet(workbook, ifs);
+    log.info("3/6 make sheet1 done");
+
+    log.info("step 3 : write workbook to ByteArrayOutputStream");
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    workbook.write(outputStream);
+    workbook.close();
+
+    log.info("step 4 : workbook write done");
+
+    return outputStream;
+  }
+
+  public ByteArrayOutputStream generateExcelSheet(String id) throws IOException, IllegalArgumentException {
 
     log.info("1/6 start generateExcelSheet");
 

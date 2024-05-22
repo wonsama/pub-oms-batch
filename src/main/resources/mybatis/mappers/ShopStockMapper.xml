@@ -117,4 +117,23 @@
     WHERE
       stck_id = #{id} -- 재고조사아이디
   </select>
+  <select id="selectIfLabelList" parameterType="String" resultType="com.fw.batch.oms.dto.ShopStockIf">
+    SELECT
+      lbl_id -- 라벨아이디
+      , prdc_id -- 제품아이디
+      , prdc_nm -- 제품명
+      , gtwy_nm -- 게이트웨이 이름
+      , btry_stts -- 배터리상태
+      , sgnl_stts -- 신호상태
+      , `type` -- 유형
+      , tmpl_type -- 템플릿 타입
+      , tmpl_mnl -- 템플릿 매뉴얼
+      , ntwr_stts -- 네트워크상태
+      , lbl_stts -- 라벨상태
+      , last_rspn_time -- 마지막 응답 시간
+    FROM
+      nvnt_aims_ntrf -- 재고관리 AIMS 인터페이스
+    WHERE
+      str_id = #{strId} -- 매장아이디
+  </select>
 </mapper>

@@ -34,4 +34,8 @@ public class ShopStockServiceImpl implements ShopStockService {
     return shopStockMapper.selectStockIf(id);
   }
 
+  public List<ShopStockIf> selectIfLabelList(String strId) {
+    return shopStockMapper.selectIfLabelList(strId);
+  }
+
 }
